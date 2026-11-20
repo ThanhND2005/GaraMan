@@ -1,5 +1,92 @@
-<%@ page import="java.util.*,vn.garaman.model.*" %><%@ include file="common.jspf" %>
-<h1>Nhận thanh toán</h1><form method="get" action="<%=request.getContextPath()%>/payment" class="row"><label>Tên khách hoặc biển số<br><input name="keyword" value="<%=Web2.html(request.getAttribute("keyword"))%>" required></label><button>Tìm kiếm</button></form>
-<% List<Customer2> customers=(List<Customer2>)request.getAttribute("customers");if(customers!=null){if(customers.isEmpty()){%><p>Không tìm thấy khách hàng.</p><%}else{%><h2>Khách hàng</h2><table><tr><th>Họ tên</th><th>Điện thoại</th><th>Biển số</th><th></th></tr><%for(Customer2 customer:customers){%><tr><td><%=Web2.html(customer.fullName())%></td><td><%=Web2.html(customer.phone())%></td><td><%=Web2.html(customer.licensePlates())%></td><td><a href="<%=request.getContextPath()%>/payment?keyword=<%=Web2.url((String)request.getAttribute("keyword"))%>&customerId=<%=customer.id()%>">Chọn</a></td></tr><%}%></table><%}}%>
-<% List<ServiceRequest2> requests=(List<ServiceRequest2>)request.getAttribute("requests");if(requests!=null){if(requests.isEmpty()){%><p>Khách hàng không có phiếu đã hoàn thành và chưa thanh toán.</p><%}else{%><h2>Phiếu đủ điều kiện</h2><table><tr><th>Mã phiếu</th><th>Khách</th><th>Xe</th><th>Ngày nhận</th><th></th></tr><%for(ServiceRequest2 item:requests){%><tr><td>YC<%=item.id()%></td><td><%=Web2.html(item.customerName())%></td><td><%=Web2.html(item.licensePlate())%></td><td><%=item.receivedAt()%></td><td><form method="post" action="<%=request.getContextPath()%>/payment"><input type="hidden" name="csrf" value="<%=Web2.csrf(session)%>"><input type="hidden" name="action" value="open"><input type="hidden" name="requestId" value="<%=item.id()%>"><button>Mở hóa đơn</button></form></td></tr><%}%></table><%}}%>
-<form method="post" action="<%=request.getContextPath()%>/logout"><input type="hidden" name="csrf" value="<%=Web2.csrf(session)%>"><button>Đăng xuất</button></form></main></body></html>
+<%@ page import="java.util.*,vn.garaman.model.*" %>
+<%@ include file="common.jspf" %>
+
+            <h1>Nhận thanh toán</h1>
+
+            <form method="get" action="<%= request.getContextPath() %>/payment" class="row">
+                <label>
+                    Tên khách hoặc biển số<br>
+                    <input name="keyword" value="<%= Web2.html(request.getAttribute("keyword")) %>" required>
+                </label>
+                <button>Tìm kiếm</button>
+            </form>
+
+            <%
+                List<Customer2> customers = (List<Customer2>) request.getAttribute("customers");
+            %>
+
+            <% if (customers != null) { %>
+                <% if (customers.isEmpty()) { %>
+                    <p>Không tìm thấy khách hàng.</p>
+                <% } else { %>
+                    <h2>Khách hàng</h2>
+
+                    <table>
+                        <tr>
+                            <th>Họ tên</th>
+                            <th>Điện thoại</th>
+                            <th>Biển số</th>
+                            <th></th>
+                        </tr>
+                        <% for (Customer2 customer : customers) { %>
+                            <tr>
+                                <td><%= Web2.html(customer.fullName()) %></td>
+                                <td><%= Web2.html(customer.phone()) %></td>
+                                <td><%= Web2.html(customer.licensePlates()) %></td>
+                                <td>
+                                    <a href="<%= request.getContextPath() %>/payment?keyword=<%=
+                                        Web2.url((String) request.getAttribute("keyword")) %>&customerId=<%= customer.id() %>">
+                                        Chọn
+                                    </a>
+                                </td>
+                            </tr>
+                        <% } %>
+                    </table>
+                <% } %>
+            <% } %>
+
+            <%
+                List<ServiceRequest2> requests = (List<ServiceRequest2>) request.getAttribute("requests");
+            %>
+
+            <% if (requests != null) { %>
+                <% if (requests.isEmpty()) { %>
+                    <p>Khách hàng không có phiếu đã hoàn thành và chưa thanh toán.</p>
+                <% } else { %>
+                    <h2>Phiếu đủ điều kiện</h2>
+
+                    <table>
+                        <tr>
+                            <th>Mã phiếu</th>
+                            <th>Khách</th>
+                            <th>Xe</th>
+                            <th>Ngày nhận</th>
+                            <th></th>
+                        </tr>
+                        <% for (ServiceRequest2 item : requests) { %>
+                            <tr>
+                                <td>YC<%= item.id() %></td>
+                                <td><%= Web2.html(item.customerName()) %></td>
+                                <td><%= Web2.html(item.licensePlate()) %></td>
+                                <td><%= item.receivedAt() %></td>
+                                <td>
+                                    <form method="post" action="<%= request.getContextPath() %>/payment">
+                                        <input type="hidden" name="csrf" value="<%= Web2.csrf(session) %>">
+                                        <input type="hidden" name="action" value="open">
+                                        <input type="hidden" name="requestId" value="<%= item.id() %>">
+                                        <button>Mở hóa đơn</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% } %>
+                    </table>
+                <% } %>
+            <% } %>
+
+            <form method="post" action="<%= request.getContextPath() %>/logout">
+                <input type="hidden" name="csrf" value="<%= Web2.csrf(session) %>">
+                <button>Đăng xuất</button>
+            </form>
+        </main>
+    </body>
+</html>

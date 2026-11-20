@@ -17,7 +17,7 @@ public final class LoginServlet2 extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         try (Connection c = DAO2.open();
                 PreparedStatement p = c.prepareStatement(
-                        "SELECT m.id,m.passwordHash FROM tblMember2 m JOIN tblSalesStaff2 s ON s.id=m.id WHERE m.username=? AND m.active")) {
+                        "SELECT id,passwordHash,role FROM tblMember2 WHERE username=? AND role='SALES_STAFF' AND active")) {
             p.setString(1, req.getParameter("username"));
             try (ResultSet r = p.executeQuery()) {
                 if (!r.next() || !Password2.verify(req.getParameter("password"), r.getString(2)))
@@ -27,6 +27,7 @@ public final class LoginServlet2 extends HttpServlet {
                     old.invalidate();
                 HttpSession session = req.getSession(true);
                 session.setAttribute("staffId", r.getLong(1));
+                session.setAttribute("role", r.getString("role"));
                 Web2.csrf(session);
                 res.sendRedirect(req.getContextPath() + "/payment");
             }

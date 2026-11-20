@@ -1,0 +1,38 @@
+services:
+  app:
+    build: .
+    image: garaman-app:local
+    restart: unless-stopped
+    environment:
+      GARAMAN_DB_URL: jdbc:postgresql://postgres:5432/garaman
+      GARAMAN_DB_USER: postgres
+      GARAMAN_DB_PASSWORD: ${GARAMAN_DB_PASSWORD:-garaman_dev}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: garaman
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${GARAMAN_DB_PASSWORD:-garaman_dev}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./src/main/resources/demo.sql:/docker-entrypoint-initdb.d/02-demo.sql:ro
+      - ./src/main/resources/demo-invoices.sql:/docker-entrypoint-initdb.d/03-demo-invoices.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d garaman"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:

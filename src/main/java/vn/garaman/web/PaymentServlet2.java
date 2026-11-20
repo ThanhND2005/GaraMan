@@ -12,16 +12,19 @@ import java.io.IOException;
 @WebServlet("/payment")
 public final class PaymentServlet2 extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        long staffId;
         try {
-            Web2.staff(req);
+            staffId = Web2.staff(req);
         } catch (Exception e) {
             res.sendRedirect(req.getContextPath() + "/login");
             return;
         }
         try (Connection c = DAO2.open()) {
+            InvoiceDAO2 dao = new InvoiceDAO2(c);
+            if (!checkStaff(dao, staffId, res)) return;
             String invoiceId = req.getParameter("invoiceId");
             if (invoiceId != null) {
-                Invoice2 invoice = new InvoiceDAO2(c).findById(Web2.id(invoiceId));
+                Invoice2 invoice = dao.findById(Web2.id(invoiceId));
                 if (invoice == null) {
                     res.sendError(404);
                     return;
@@ -35,16 +38,7 @@ public final class PaymentServlet2 extends HttpServlet {
                 } else if ("add".equals(view)) {
                     if (!"DRAFT".equals(invoice.invoiceStatus()))
                         throw new IllegalArgumentException("Hóa đơn đã xác nhận");
-                    String itemKeyword = req.getParameter("itemKeyword");
-                    String type = req.getParameter("type");
-                    req.setAttribute("itemKeyword", itemKeyword == null ? "" : itemKeyword.strip());
-                    req.setAttribute("type", "PART".equals(type) ? "PART" : "SERVICE");
-                    if (itemKeyword != null && !itemKeyword.isBlank()) {
-                        if ("PART".equals(type))
-                            req.setAttribute("parts", new SparePartDAO2(c).findByKeyword(itemKeyword));
-                        else
-                            req.setAttribute("services", new ServiceDAO2(c).findByKeyword(itemKeyword));
-                    }
+                    loadItems(req, c);
                     req.getRequestDispatcher("/WEB-INF/jsp/addInvoiceItem2.jsp").forward(req, res);
                 } else
                     req.getRequestDispatcher("/WEB-INF/jsp/invoiceDetail2.jsp").forward(req, res);
@@ -65,13 +59,44 @@ public final class PaymentServlet2 extends HttpServlet {
         }
     }
 
+    private boolean checkStaff(InvoiceDAO2 dao, long staffId, HttpServletResponse res) throws java.sql.SQLException, IOException {
+        if (dao.isActiveSalesStaff(staffId)) return true;
+        res.sendError(403);
+        return false;
+    }
+
+    private void loadItems(HttpServletRequest req, Connection c) throws java.sql.SQLException {
+        String itemKeyword = req.getParameter("itemKeyword");
+        String type = req.getParameter("type");
+        req.setAttribute("itemKeyword", itemKeyword == null ? "" : itemKeyword.strip());
+        req.setAttribute("type", "PART".equals(type) ? "PART" : "SERVICE");
+        if (itemKeyword != null && !itemKeyword.isBlank()) {
+            if ("PART".equals(type))
+                req.setAttribute("parts", new SparePartDAO2(c).findForInvoice(itemKeyword));
+            else
+                req.setAttribute("services", new ServiceDAO2(c).findForInvoice(itemKeyword));
+        }
+    }
+
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
+        long staffId;
         try {
-            long staffId = Web2.staff(req);
+            staffId = Web2.staff(req);
+        } catch (IllegalArgumentException e) {
+            res.sendRedirect(req.getContextPath() + "/login");
+            return;
+        }
+        try {
             Web2.checkCsrf(req);
+        } catch (IllegalArgumentException e) {
+            res.sendError(403);
+            return;
+        }
+        try {
             try (Connection c = DAO2.open()) {
                 InvoiceDAO2 dao = new InvoiceDAO2(c);
+                if (!checkStaff(dao, staffId, res)) return;
                 String action = req.getParameter("action");
                 Invoice2 invoice;
                 switch (action == null ? "" : action) {
@@ -93,10 +118,10 @@ public final class PaymentServlet2 extends HttpServlet {
             if (invoiceId != null) {
                 req.setAttribute("invoiceId", invoiceId);
                 String action = req.getParameter("action");
-                if ("add".equals(action))
-                    req.setAttribute("errorView", "add");
+
                 try (Connection c = DAO2.open()) {
                     req.setAttribute("invoice", new InvoiceDAO2(c).findById(Web2.id(invoiceId)));
+                    if ("add".equals(action)) loadItems(req, c);
                 } catch (Exception ignored) {
                 }
                 req.getRequestDispatcher(

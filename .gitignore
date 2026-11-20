@@ -28,6 +28,9 @@ docker-compose*
 compose*.yaml
 compose*.yml
 .dockerignore
+!/Dockerfile
+!/.dockerignore
+!/compose.yaml
 
 # ==========================================
 # Build & Dependency Outputs (Java / Maven)

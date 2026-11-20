@@ -2,8 +2,11 @@ package vn.garaman.web;
 
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.UUID;
 
 public final class Web2 {
@@ -19,6 +22,13 @@ public final class Web2 {
 
     public static String url(String value) {
         return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
+    }
+
+    public static String formatNumber(BigDecimal value) {
+        BigDecimal compact = value.stripTrailingZeros();
+        NumberFormat format = NumberFormat.getNumberInstance(Locale.forLanguageTag("vi-VN"));
+        format.setMaximumFractionDigits(Math.max(0, compact.scale()));
+        return format.format(compact);
     }
 
     public static long id(String value) {
@@ -49,7 +59,7 @@ public final class Web2 {
 
     public static long staff(HttpServletRequest req) {
         HttpSession s = req.getSession(false);
-        if (s == null || s.getAttribute("staffId") == null)
+        if (s == null || s.getAttribute("staffId") == null || !"SALES_STAFF".equals(s.getAttribute("role")))
             throw new IllegalArgumentException("Vui lòng đăng nhập");
         return (Long) s.getAttribute("staffId");
     }

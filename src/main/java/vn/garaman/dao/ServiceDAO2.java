@@ -10,11 +10,20 @@ public final class ServiceDAO2 extends DAO2 {
     }
 
     public List<Service2> findByKeyword(String keyword) throws SQLException {
+        return search(keyword, false);
+    }
+
+    public List<Service2> findForInvoice(String keyword) throws SQLException {
+        return search(keyword, true);
+    }
+
+    private List<Service2> search(String keyword, boolean includeCode) throws SQLException {
         if (keyword == null || keyword.isBlank())
             return List.of();
-        String sql = "SELECT * FROM tblService2 WHERE active AND name ILIKE ? ESCAPE '\\' ORDER BY name,id";
+        String sql = "SELECT * FROM tblService2 WHERE active AND (name ILIKE ? ESCAPE '\\'" + (includeCode ? " OR code ILIKE ? ESCAPE '\\'" : "") + ") ORDER BY name,id";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, pattern(keyword));
+            if (includeCode) p.setString(2, pattern(keyword));
             try (ResultSet r = p.executeQuery()) {
                 List<Service2> out = new ArrayList<>();
                 while (r.next())
@@ -24,7 +33,7 @@ public final class ServiceDAO2 extends DAO2 {
         }
     }
 
-    public Service2 findById(long id) throws SQLException {
+    public Service2 findById(Long id) throws SQLException {
         try (PreparedStatement p = connection.prepareStatement("SELECT * FROM tblService2 WHERE id=? AND active")) {
             p.setLong(1, id);
             try (ResultSet r = p.executeQuery()) {
@@ -33,8 +42,8 @@ public final class ServiceDAO2 extends DAO2 {
         }
     }
 
-    private static Service2 map(ResultSet r) throws SQLException {
+    static Service2 map(ResultSet r) throws SQLException {
         return new Service2(r.getLong("id"), r.getString("code"), r.getString("name"), r.getString("description"),
-                r.getString("category"), r.getBigDecimal("unitPrice"), r.getInt("estimatedDuration"));
+                r.getString("category"), r.getBigDecimal("unitPrice"), r.getInt("estimatedDuration"), r.getBoolean("active"));
     }
 }
