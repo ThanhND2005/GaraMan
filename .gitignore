@@ -1,0 +1,73 @@
+# ==========================================
+# Tài liệu, văn bản, file media (Document files)
+# ==========================================
+*.docx
+*.doc
+*.pdf
+*.pptx
+*.ppt
+*.xlsx
+*.xls
+*.odt
+*.rtf
+*.txt
+*.csv
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# Ngoại trừ tài liệu dự án nếu cần (giữ README.md)
+!README.md
+
+# ==========================================
+# Docker & Container files
+# ==========================================
+Dockerfile*
+docker-compose*
+compose*.yaml
+compose*.yml
+.dockerignore
+
+# ==========================================
+# Build & Dependency Outputs (Java / Maven)
+# ==========================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
+# ==========================================
+# IDE & Tool configurations
+# ==========================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# ==========================================
+# Environment variables & Logs
+# ==========================================
+*.log
+*.env
+*.env.*
+!.env.example
+
+# ==========================================
+# OS generated files
+# ==========================================
+Thumbs.db
+Desktop.ini
+.DS_Store
